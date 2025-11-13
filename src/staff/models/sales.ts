@@ -14,7 +14,7 @@ export class Sales extends StaffMember {
 
     // 0.3% of *all* subordinates at any level
     let allSubordinatesBonus = 0;
-    const allSubordinates = this.getAllSubordinatesRecursively(this); 
+    const allSubordinates = this.getAllSubordinates(this); 
 
     if (allSubordinates.length > 0) {
       const allSubordinatesSalaries = allSubordinates.reduce(
@@ -27,25 +27,19 @@ export class Sales extends StaffMember {
     return Number(this.baseSalary) + yearlyBonusAmount + allSubordinatesBonus;
   }
 
-  /**
-   * A private helper to recursively get all subordinates at every level.
-   * This is the "tree traversal" .
-   */
-  private getAllSubordinatesRecursively(staffMember: StaffMember): StaffMember[] {
+    private getAllSubordinates(staffMember: StaffMember): StaffMember[] {
     let allSubs: StaffMember[] = [];
 
-    // This check is vital. We must have the subordinates loaded!
+    
     if (!staffMember.subordinates || staffMember.subordinates.length === 0) {
       return [];
     }
 
-    // Add the direct (first-level) subordinates
     allSubs = [...staffMember.subordinates];
 
-    // Then, for each direct subordinate, find *their* subordinates
     for (const sub of staffMember.subordinates) {
-      // This is the recursion
-      allSubs = allSubs.concat(this.getAllSubordinatesRecursively(sub));
+      
+      allSubs = allSubs.concat(this.getAllSubordinates(sub));
     }
 
     return allSubs;

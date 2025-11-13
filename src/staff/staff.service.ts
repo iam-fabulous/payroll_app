@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { TreeRepository } from 'typeorm';
 import { Repository } from 'typeorm';
 import { StaffMember } from './models/staff_member';
 import { CreateStaffDto } from './dto/create_staff.dto'; // We'll create this next
@@ -11,7 +12,7 @@ import { Sales } from './models/sales';
 export class StaffService {
     constructor(
         @InjectRepository(StaffMember)
-        private staffRepository: Repository<StaffMember>,
+        private staffRepository: TreeRepository<StaffMember>,
     ) {}
 
     // Create a new Staff Member
@@ -60,4 +61,26 @@ export class StaffService {
             relations: ['subordinates', 'supervisor'], // Load relationships so we can see who reports to who
         });
     }
+
+    async getSalary(id: number, atDateStr: string): Promise<number> {
+        const atDate = new Date(atDateStr);
+        const staff = await this.findStaffMemberWithSurbodinates(id);
+        if (!staff) {
+            throw new NotFoundException(`Staff member with ID ${id} not found`);
+        }
+        return staff.calculateSalary(atDate);
+    }
+
+    private async findStaffMemberWithSurbodinates(id: number): Promise<StaffMember | null> {
+    
+    const staff = await this.staffRepository.findOne({ where: { id } });
+    
+    if (!staff) return null;
+
+    // 🌟 THE MAGIC LINE 🌟
+    // This asks TypeORM: "Find this person, AND fetch all their descendants, 
+    // no matter how deep they go, and stick them into the .subordinates array."
+    // It uses optimized SQL to do this efficiently.
+    return this.staffRepository.findDescendantsTree(staff);
+  }
 }
