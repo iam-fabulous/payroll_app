@@ -62,6 +62,10 @@ export class StaffService {
         });
     }
 
+    async findStaffById(id: number): Promise<StaffMember | null> {
+        return this.staffRepository.findOne({ where: { id } });
+    }
+
     async getSalary(id: number, atDateStr: string): Promise<number> {
         const atDate = new Date(atDateStr);
         const staff = await this.findStaffMemberWithSurbodinates(id);
@@ -79,4 +83,32 @@ export class StaffService {
 
     return this.staffRepository.findDescendantsTree(staff);
   }
+
+  async assignSupervisor(staffId: number, supervisorId: number): Promise<StaffMember | undefined> {
+    if (staffId === supervisorId) {
+        throw new BadRequestException('A staff member cannot supervise themselves.');
+    }
+
+    const staff = await this.findStaffById(staffId);
+    const supervisor = await this.findStaffById(supervisorId);
+
+    if (!staff) throw new NotFoundException(`Staff #${staffId} not found`);
+    if (!supervisor) throw new NotFoundException(`Supervisor #${supervisorId} not found`);
+
+    if (supervisor instanceof Employee || supervisor.type === 'EMPLOYEE') {
+        throw new BadRequestException(
+          `Cannot assign ${supervisor.name} as supervisor. Employees cannot have subordinates.`
+        );
+    }
+
+    if (staff && supervisor) {
+        staff.supervisor = supervisor;
+        if ('subordinates' in supervisor && supervisor.subordinates) {
+            supervisor.subordinates.push(staff);
+        }
+        return staff;
+    }
+    return undefined;
+  }
+
 }
