@@ -23,6 +23,9 @@ export abstract class StaffMember {
   @Column()
   name: string;
 
+  @Column({ type: 'varchar', insert: false, update: false })
+  type: string;
+
   @Column()
   @Transform(({value}) => {
     if (value instanceof Date) {

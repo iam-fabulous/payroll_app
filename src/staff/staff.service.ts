@@ -58,7 +58,7 @@ export class StaffService {
 
     async findAll(): Promise<StaffMember[]> {
         return this.staffRepository.find({
-            relations: ['subordinates', 'supervisor'], // Load relationships so we can see who reports to who
+            relations: ['subordinates', 'supervisor'], 
         });
     }
 
@@ -77,10 +77,6 @@ export class StaffService {
     
     if (!staff) return null;
 
-    // 🌟 THE MAGIC LINE 🌟
-    // This asks TypeORM: "Find this person, AND fetch all their descendants, 
-    // no matter how deep they go, and stick them into the .subordinates array."
-    // It uses optimized SQL to do this efficiently.
     return this.staffRepository.findDescendantsTree(staff);
   }
 }
