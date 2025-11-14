@@ -1,98 +1,173 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Payroll Management System
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A robust, hierarchical payroll API built with **NestJS**, **TypeORM**, and **SQLite**. This application models a corporate structure (Employees, Managers, Sales) and implements a complex, date-aware salary calculation engine using polymorphic business logic.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## Features
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+* **Staff Management:** Create Employees, Managers, and Sales staff with validation.
+* **Hierarchy Management:** Assign supervisors and manage reporting lines.
+    * *Constraint Enforcement:* Ensures Employees cannot be supervisors.
+* **Dynamic Salary Calculation:**
+    * Calculates salaries for any arbitrary date (past, present, or future).
+    * **Base Logic:** Base Salary + Longevity Bonus (Years Worked × Rate).
+    * **Caps:** Enforces specific bonus caps (30% for Employees, 40% for Managers, 35% for Sales).
+* **Team Bonuses:**
+    * **Managers:** Earn 0.5% of their direct subordinates' total salary.
+    * **Sales:** Earn 0.3% of their *entire* recursive hierarchy (subordinates of subordinates).
+* **Analytics:** Calculate the total salary expenditure for the entire company for a specific date.
+* **Search:** Find staff members by partial name matching.
 
-## Project setup
+---
 
-```bash
-$ pnpm install
-```
+## Architecture & Design Decisions
 
-## Compile and run the project
+### 1. Single Table Inheritance (STI)
+Instead of creating three separate database tables, I used TypeORM's Single Table Inheritance pattern.
+* **Why:** All staff types share core data (Name, Join Date, Base Salary).
+* **Implementation:** A single `staff_member` table with a `type` discriminator column (`EMPLOYEE`, `MANAGER`, `SALES`).
+* **Benefit:** Simplifies database queries and allows fetching the entire company hierarchy in a single call without expensive `JOIN` operations.
 
-```bash
-# development
-$ pnpm run start
+### 2. Polymorphism over Conditionals
+I avoided using large `if/else` or `switch` statements to handle the different salary rules.
+* **Implementation:** A base `StaffMember` abstract class defines the `calculateSalary()` contract. Each subclass (`Employee`, `Manager`, `Sales`) implements its own specific logic.
+* **Benefit:** Adheres to the **Open/Closed Principle**. Adding a new role (e.g., "Director") requires creating a new class, not modifying existing code.
 
-# watch mode
-$ pnpm run start:dev
+### 3. Materialized Path (Tree Repository)
+To handle the recursive "Sales" bonus (which requires summing salaries for the entire deep hierarchy), I used the **Materialized Path** pattern via TypeORM's `@Tree`.
+* **Why:** It allows fetching deep nested trees efficiently.
+* **Benefit:** Prevents the "N+1 query problem" when calculating totals for the company.
 
-# production mode
-$ pnpm run start:prod
-```
+---
 
-## Run tests
+## Tech Stack
 
-```bash
-# unit tests
-$ pnpm run test
+* **Framework:** NestJS
+* **Language:** TypeScript
+* **Database:** SQLite (Serverless, file-based)
+* **ORM:** TypeORM
+* **Validation:** class-validator & class-transformer
+* **Testing:** Jest
 
-# e2e tests
-$ pnpm run test:e2e
+---
 
-# test coverage
-$ pnpm run test:cov
-```
+## Setup & Installation
 
-## Deployment
+1.  **Install Dependencies:**
+    ```bash
+    npm install
+    ```
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+2.  **Run the Application:**
+    ```bash
+    npm run start:dev
+    ```
+    *The server will start on `http://localhost:3000` and automatically generate the `company.sqlite` database file.*
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+3.  **Run Tests:**
+    ```bash
+    npm test
+    ```
+    *Includes Unit Tests for salary logic and hierarchy validation.*
 
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
+---
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## API Reference
 
-## Resources
+### Staff Management
 
-Check out a few resources that may come in handy when working with NestJS:
+#### **Create Staff Member**
+`POST /staff`
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Creates a new staff member. i also modified this endpoint to get a single staff or staffs that bears the same name!
+* **Body:**
+    ```json
+    {
+      "name": "John Doe",
+      "joinDate": "2023-01-01",
+      "baseSalary": 5000,
+      "type": "EMPLOYEE"
+    }
+    ```
+    *Type options: `EMPLOYEE`, `MANAGER`, `SALES`*
 
-## Support
+#### **List All Staff**
+`GET /staff`
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+1. Retrieves all staff members.
+* **Query Param:** `name` (Optional) - Filter by name.
 
-## Stay in touch
+2. Retrieves a staff(s) with 'name'.
+* **Example:** `GET /staff?name=John`
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+#### **Assign Supervisor**
+`PATCH /staff/:staffId/assign-supervisor/:supervisorId`
 
-## License
+Updates a staff member to report to a new supervisor.
+* **Body:**
+    ```json
+    {
+        "staffId": 5,
+        "supervisorId": 2
+    }
+    ```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+---
+
+### Salary Calculations
+
+#### **Get Individual Salary**
+`GET /staff/salary`
+
+Calculates the salary for a specific person as of a specific date.
+* **Query Params:**
+    * `staffId` (Required)
+    * `currentDate` (Optional, defaults to today)
+* **Example:** `GET /staff/salary?staffId=1&currentDate=2025-01-01`
+* **Response:**
+    ```json
+    {
+      "staffId": 1,
+      "staffName": "Big Boss",
+      "salary": 1250.5,
+      "asOf": "2025-01-01"
+    }
+    ```
+
+#### **Get Total Company Salary**
+`GET /staff/total-salary`
+
+Calculates the sum of ALL salaries in the company for a specific date.
+* **Query Params:**
+    * `atDate` (Optional, defaults to today)
+* **Example:** `GET /staff/total-salary?atDate=2025-01-01`
+* **Response:**
+    ```json
+    {
+      "totalSalaryExpenditure": 20667.725,
+      "asOf": "2025-01-01"
+    }
+    ```
+
+---
+
+## Drawbacks & Future Improvements
+
+1.  **Recursive Calculation Performance:**
+    * *Current State:* Salary calculation happens in the application layer (Node.js) using recursion.
+    * *Drawback:* For extremely large organizations (100k+ employees), this could be CPU intensive.
+    * *Improvement:* Implement database-level stored procedures or materialized views to cache salary totals.
+
+2.  **Hardcoded Business Rules:**
+    * *Current State:* Bonus rates (3%, 0.5%) are defined in the class files.
+    * *Improvement:* Move these rates to a database configuration table so HR can update them without to modify the code.
+
+3.  **SQLite Concurrency:**
+    * *Current State:* Uses SQLite for simplicity.
+    * *Drawback:* SQLite locks the file during writes, limiting concurrency.
+    * *Improvement:* Switch to **PostgreSQL** or **MongoDB** for production environments.
+
+---
+
+**Author:** Innah Emmanuel Ebuka
