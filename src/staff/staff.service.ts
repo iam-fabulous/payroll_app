@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Like, TreeRepository } from 'typeorm';
 import { Repository } from 'typeorm';
 import { StaffMember } from './models/staff_member';
 import { CreateStaffDto } from './dto/create_staff.dto'; // We'll create this next
@@ -11,7 +12,7 @@ import { Sales } from './models/sales';
 export class StaffService {
     constructor(
         @InjectRepository(StaffMember)
-        private staffRepository: Repository<StaffMember>,
+        private staffRepository: TreeRepository<StaffMember>,
     ) {}
 
     // Create a new Staff Member
@@ -55,9 +56,64 @@ export class StaffService {
         return this.staffRepository.save(staff);
     }
 
-    async findAll(): Promise<StaffMember[]> {
+    async findAll(nameFilter?: string): Promise<StaffMember[]> {
+        const whereCondition = nameFilter
+            ? { name: Like(`%${nameFilter}%`) }
+            : {};
+
         return this.staffRepository.find({
-            relations: ['subordinates', 'supervisor'], // Load relationships so we can see who reports to who
+            where: whereCondition,
+            relations: ['subordinates', 'supervisor'], 
         });
     }
+
+    async findStaffById(id: number): Promise<StaffMember | null> {
+        return this.staffRepository.findOne({ where: { id } });
+    }
+
+    async getSalary(id: number, atDateStr: string): Promise<number> {
+        const atDate = new Date(atDateStr);
+        const staff = await this.findStaffMemberWithSurbodinates(id);
+        if (!staff) {
+            throw new NotFoundException(`Staff member with ID ${id} not found`);
+        }
+        return staff.calculateSalary(atDate);
+    }
+
+    private async findStaffMemberWithSurbodinates(id: number): Promise<StaffMember | null> {
+    
+    const staff = await this.staffRepository.findOne({ where: { id } });
+    
+    if (!staff) return null;
+
+    return this.staffRepository.findDescendantsTree(staff);
+  }
+
+  async assignSupervisor(staffId: number, supervisorId: number): Promise<StaffMember | undefined> {
+    if (staffId === supervisorId) {
+        throw new BadRequestException('A staff member cannot supervise themselves.');
+    }
+
+    const staff = await this.findStaffById(staffId);
+    const supervisor = await this.findStaffById(supervisorId);
+
+    if (!staff) throw new NotFoundException(`Staff #${staffId} not found`);
+    if (!supervisor) throw new NotFoundException(`Supervisor #${supervisorId} not found`);
+
+    if (supervisor instanceof Employee || supervisor.type === 'EMPLOYEE') {
+        throw new BadRequestException(
+          `Cannot assign ${supervisor.name} as supervisor. Employees cannot have subordinates.`
+        );
+    }
+
+    if (staff && supervisor) {
+        staff.supervisor = supervisor;
+        if ('subordinates' in supervisor && supervisor.subordinates) {
+            supervisor.subordinates.push(staff);
+        }
+        return staff;
+    }
+    return undefined;
+  }
+
 }
