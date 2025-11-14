@@ -1,5 +1,5 @@
 
-import { Transform } from 'class-transformer';
+import { Transform, Expose } from 'class-transformer';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,11 +7,14 @@ import {
   TableInheritance,
   ManyToOne,
   OneToMany,
+  Tree,
+  TreeChildren,
+  TreeParent,
 } from 'typeorm';
 
 
 @Entity({ name: 'staff_member'})
-
+@Tree("materialized-path")
 @TableInheritance({ column: { type: 'varchar', name: 'type' } })
 export abstract class StaffMember {
   @PrimaryGeneratedColumn()
@@ -19,6 +22,11 @@ export abstract class StaffMember {
 
   @Column()
   name: string;
+
+  @Expose()
+  get type(): string {
+    return this.constructor.name.toUpperCase();
+  }
 
   @Column()
   @Transform(({value}) => {
@@ -33,14 +41,11 @@ export abstract class StaffMember {
   baseSalary: number;
 
   
-  @ManyToOne(() => StaffMember, (staff) => staff.subordinates, {
-    nullable: true, 
-    onDelete: 'SET NULL', 
-  })
+  @TreeParent()
   supervisor: StaffMember;
 
   
-  @OneToMany(() => StaffMember, (staff) => staff.supervisor)
+  @TreeChildren()
   subordinates: StaffMember[];
 
   

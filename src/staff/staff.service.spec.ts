@@ -12,6 +12,8 @@ const mockStaffRepository = {
     save: jest.fn(),
     create: jest.fn(),
     find: jest.fn(),
+    findDescendantsTree: jest.fn(),
+    findTrees: jest.fn(),
 };
 
 describe('StaffService', () => {
@@ -178,4 +180,126 @@ describe('StaffService', () => {
                 });
             });
 
+
+        describe('getSalary', () => {
+            const atDate = '2025-01-01';
+
+            it('Test-07: should throw NotFoundException if staff member does not exist', async () => {
+            
+            mockStaffRepository.findOne.mockResolvedValue(null);
+
+            await expect(service.getSalary(999, atDate)).rejects.toThrow(NotFoundException);
+            });
+
+            it('Test-08:should return the calculated salary for a valid Employee', async () => {
+                
+            const employee = new Employee();
+            employee.baseSalary = 2000;
+            employee.dateJoined = new Date('2024-01-01'); // 1 year worked
+
+
+            mockStaffRepository.findOne.mockResolvedValue(employee);
+            
+            mockStaffRepository.findDescendantsTree.mockResolvedValue(employee);
+
+            
+            const result = await service.getSalary(1, atDate);
+
+            // Assert: Base (2000) + 1 year bonus (3% = 60) = 2060
+            expect(result).toBe(2060);
+            });
+
+            it('Test-09:should return calculated salary for Manager including subordinates', async () => {
+
+            const sub = new Employee();
+            sub.baseSalary = 1000;
+            sub.dateJoined = new Date(atDate); // 0 bonus
+            // Sub salary = 1000
+
+            const manager = new Manager();
+            manager.baseSalary = 2000;
+            manager.dateJoined = new Date(atDate); // 0 bonus
+            manager.subordinates = [sub]; // Link them
+            
+            
+            mockStaffRepository.findOne.mockResolvedValue(manager);
+            mockStaffRepository.findDescendantsTree.mockResolvedValue(manager);
+
+            
+            const result = await service.getSalary(2, atDate);
+
+            // Assert: 
+            // Manager Base (2000) + 
+            // Manager Team Bonus (0.5% of 1000 = 5) 
+            // Total = 2005
+            expect(result).toBe(2005);
+            });
+
+
+            const now = new Date('2025-01-01');
+            const tenYearsAgo = new Date('2015-01-01'); // 10 years worked
+            const twentyYearsAgo = new Date('2005-01-01'); // 20 years worked
+
+            it('LOGIC-01: Employee salary should include 3% per year', async () => {
+            // Arrange: Employee worked 10 years. 10 * 3% = 30% bonus.
+            // Base: 1000 -> Bonus: 300 -> Total: 1300
+            const employee = new Employee();
+            employee.baseSalary = 1000;
+            employee.dateJoined = tenYearsAgo;
+
+            mockStaffRepository.findOne.mockResolvedValue(employee);
+            mockStaffRepository.findDescendantsTree.mockResolvedValue(employee);
+            
+            const result = await service.getSalary(1, now.toISOString());
+
+            
+            expect(result).toBe(1300);
+            });
+
+                it('LOGIC-02: Employee salary should CAP at 30% bonus', async () => {
+                    // Arrange: Employee worked 20 years. 
+                    // Math: 20 * 3% = 60%. BUT cap is 30%.
+                    // Base: 1000 -> Bonus Cap: 300 -> Total: 1300
+                    const employee = new Employee();
+                    employee.baseSalary = 1000;
+                    employee.dateJoined = twentyYearsAgo; // Worked 20 years
+
+                    mockStaffRepository.findOne.mockResolvedValue(employee);
+                    mockStaffRepository.findDescendantsTree.mockResolvedValue(employee);
+                    // Act
+                    const result = await service.getSalary(1, now.toISOString());
+
+                    // Assert
+                    expect(result).toBe(1300); // Should match the cap, not 1600
+                 });
+
+                 it('should calculate the company salary expenditure correctly', async () => {
+                    const date = new Date('2025-01-01');
+
+                    const emp1 = new Employee();
+                    emp1.baseSalary = 1000;
+                    emp1.dateJoined = date; // No bonus
+
+                    // Salary: Base 2000 + (0.5% of Employee's 1000) = 2005
+                    const mgr = new Manager();
+                    mgr.baseSalary = 2000;
+                    mgr.dateJoined = date;
+                    mgr.subordinates = [emp1];
+
+                    //Subordinates' Total Salaries = Manager (2005) + Employee (1000) = 3005
+                    // Salary: Base 3000 + (0.3% of 3005) = 3009.015
+                    const sales = new Sales();
+                    sales.baseSalary = 3000;
+                    sales.dateJoined = date;
+                    sales.subordinates = [mgr]; 
+
+                    mockStaffRepository.findTrees = jest.fn().mockResolvedValue([sales]);
+
+                    const totalExpenditure = await service.getTotalSalary(date.toISOString());
+
+                    // Total should be Sales (3009.015) + Manager (2005) + Employee (1000) = 6014.015
+                    expect(totalExpenditure).toBeCloseTo(6014.015, 3);
+                 });
+
+        });
     })
