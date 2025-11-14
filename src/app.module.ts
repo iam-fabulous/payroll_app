@@ -13,7 +13,7 @@ import { Sales } from './staff/models/sales';
   imports: [
     TypeOrmModule.forRoot({
       type: 'sqlite',
-      database: 'company.sqlite',
+      database: process.env.DATABASE_PATH || 'company.sqlite',
       entities: [
         StaffMember,
         Employee,
