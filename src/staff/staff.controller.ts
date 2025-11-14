@@ -59,7 +59,7 @@ export class StaffController {
         }
     }
 
-    @Patch(':staffId/assign-supervisor/:supervisorId')
+    @Patch('assign-supervisor')
     async assignSupervisor(
         @Body() updateSupervisorDto: UpdateSupervisorDto
     ) {
