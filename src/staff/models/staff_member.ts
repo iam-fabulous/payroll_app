@@ -1,5 +1,5 @@
 
-import { Transform } from 'class-transformer';
+import { Transform, Expose } from 'class-transformer';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -23,8 +23,10 @@ export abstract class StaffMember {
   @Column()
   name: string;
 
-  @Column({ type: 'varchar', insert: false, update: false })
-  type: string;
+  @Expose()
+  get type(): string {
+    return this.constructor.name.toUpperCase();
+  }
 
   @Column()
   @Transform(({value}) => {

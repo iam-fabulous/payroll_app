@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { TreeRepository } from 'typeorm';
+import { Like, TreeRepository } from 'typeorm';
 import { Repository } from 'typeorm';
 import { StaffMember } from './models/staff_member';
 import { CreateStaffDto } from './dto/create_staff.dto'; // We'll create this next
@@ -56,8 +56,13 @@ export class StaffService {
         return this.staffRepository.save(staff);
     }
 
-    async findAll(): Promise<StaffMember[]> {
+    async findAll(nameFilter?: string): Promise<StaffMember[]> {
+        const whereCondition = nameFilter
+            ? { name: Like(`%${nameFilter}%`) }
+            : {};
+
         return this.staffRepository.find({
+            where: whereCondition,
             relations: ['subordinates', 'supervisor'], 
         });
     }

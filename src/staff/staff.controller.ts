@@ -8,8 +8,10 @@ import {
     ParseIntPipe,
     Param,
     Query,
+    Patch,
 }   from '@nestjs/common';
 import { CreateStaffDto } from './dto/create_staff.dto';
+import { UpdateSupervisorDto } from './dto/update_supervisor.dto';
 import { StaffService } from './staff.service';
 import { StaffMember } from './models/staff_member';
 import { CalculateSalaryDto } from './dto/calculate_salary.dto';
@@ -24,9 +26,9 @@ export class StaffController {
         return this.staffService.createStaff(createStaffDto);
     }
 
-    @Get('findAllStaff')
-    findAll() {
-        return this.staffService.findAll();
+    @Get()
+    findAll(@Query('name') name?: string) {
+        return this.staffService.findAll(name);
     }
 
     @Get('salary')
@@ -35,11 +37,23 @@ export class StaffController {
     ) {
         const dateAsString = query.currentDate || new Date().toISOString();
         const salary = await this.staffService.getSalary(query.staffId, dateAsString);
+        const staff = await this.staffService.findStaffById(query.staffId);
 
         return {
             staffId: query.staffId,
+            staffName: staff ? staff.name : 'Unknown',
             salary: salary,
             asOf: dateAsString,
         }
+    }
+
+    @Patch(':staffId/assign-supervisor/:supervisorId')
+    async assignSupervisor(
+        @Body() updateSupervisorDto: UpdateSupervisorDto
+    ) {
+        return this.staffService.assignSupervisor(
+            updateSupervisorDto.staffId,
+            updateSupervisorDto.supervisorId,
+        );
     }
 }
