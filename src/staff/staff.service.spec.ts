@@ -13,6 +13,7 @@ const mockStaffRepository = {
     create: jest.fn(),
     find: jest.fn(),
     findDescendantsTree: jest.fn(),
+    findTrees: jest.fn(),
 };
 
 describe('StaffService', () => {
@@ -270,6 +271,34 @@ describe('StaffService', () => {
 
                     // Assert
                     expect(result).toBe(1300); // Should match the cap, not 1600
+                 });
+
+                 it('should calculate the company salary expenditure correctly', async () => {
+                    const date = new Date('2025-01-01');
+
+                    const emp1 = new Employee();
+                    emp1.baseSalary = 1000;
+                    emp1.dateJoined = date; // No bonus
+
+                    // Salary: Base 2000 + (0.5% of Employee's 1000) = 2005
+                    const mgr = new Manager();
+                    mgr.baseSalary = 2000;
+                    mgr.dateJoined = date;
+                    mgr.subordinates = [emp1];
+
+                    //Subordinates' Total Salaries = Manager (2005) + Employee (1000) = 3005
+                    // Salary: Base 3000 + (0.3% of 3005) = 3009.015
+                    const sales = new Sales();
+                    sales.baseSalary = 3000;
+                    sales.dateJoined = date;
+                    sales.subordinates = [mgr]; 
+
+                    mockStaffRepository.findTrees = jest.fn().mockResolvedValue([sales]);
+
+                    const totalExpenditure = await service.getTotalSalary(date.toISOString());
+
+                    // Total should be Sales (3009.015) + Manager (2005) + Employee (1000) = 6014.015
+                    expect(totalExpenditure).toBeCloseTo(6014.015, 3);
                  });
 
         });

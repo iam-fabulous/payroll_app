@@ -89,6 +89,26 @@ export class StaffService {
     return this.staffRepository.findDescendantsTree(staff);
   }
 
+
+    async getTotalSalary(atDateStr: string): Promise<number> {
+        const atDate = new Date(atDateStr);
+        const roots = await this.staffRepository.findTrees();
+
+        let totalCompanySalary = 0;
+
+        const sumOfAllStaffSalaries = (staffList: StaffMember[]) => {
+            for (const staff of staffList) {
+                totalCompanySalary += staff.calculateSalary(atDate);
+                if (staff.subordinates && staff.subordinates.length > 0) {
+                    sumOfAllStaffSalaries(staff.subordinates);
+                }
+            }
+        }
+        sumOfAllStaffSalaries(roots);
+
+        return totalCompanySalary;
+    }
+
   async assignSupervisor(staffId: number, supervisorId: number): Promise<StaffMember | undefined> {
     if (staffId === supervisorId) {
         throw new BadRequestException('A staff member cannot supervise themselves.');

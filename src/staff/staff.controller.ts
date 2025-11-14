@@ -47,6 +47,18 @@ export class StaffController {
         }
     }
 
+    @Get('total-salary')
+    async getTotalSalary(
+        @Query('atDate') atDate: string,
+    ){
+        const dateAsString = atDate || new Date().toISOString();
+        const totalSalary = await this.staffService.getTotalSalary(dateAsString);
+        return {
+            totalSalaryExpenditure: totalSalary,
+            asOf: dateAsString,
+        }
+    }
+
     @Patch(':staffId/assign-supervisor/:supervisorId')
     async assignSupervisor(
         @Body() updateSupervisorDto: UpdateSupervisorDto
