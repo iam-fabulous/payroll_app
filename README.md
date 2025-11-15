@@ -178,9 +178,9 @@ All endpoints are fully documented and testable. Once the server is running, you
 **[http://localhost:3000/api](http://localhost:3000/api-docs)**
 
 
-### API Demo
+### API Demo Link!
 
-**![Demo of Payroll API](https://ibb.co/rfMN64jm)**
+**[https://ibb.co/rfMN64jm](https://ibb.co/rfMN64jm)**
 ---
 
 **Author:** Innah Emmanuel Ebuka
