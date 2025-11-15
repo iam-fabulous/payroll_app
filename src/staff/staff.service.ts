@@ -131,6 +131,7 @@ export class StaffService {
         if ('subordinates' in supervisor && supervisor.subordinates) {
             supervisor.subordinates.push(staff);
         }
+        await this.staffRepository.save(staff);
         return staff;
     }
     return undefined;

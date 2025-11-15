@@ -1,6 +1,8 @@
 # Payroll Management System
 
-A robust, hierarchical payroll API built with **NestJS**, **TypeORM**, and **SQLite**. This application models a corporate structure (Employees, Managers, Sales) and implements a complex, date-aware salary calculation engine using polymorphic business logic.
+A robust, hierarchical payroll API built with **NestJS**, **TypeORM**, and **SQLite**. This application models a corporate structure (Employees, Managers, Sales) and implements a complex, date-aware salary calculation engine using polymorphic business logic. 
+
+    Api demo link below!
 
 ---
 
@@ -168,6 +170,17 @@ Calculates the sum of ALL salaries in the company for a specific date.
     * *Drawback:* SQLite locks the file during writes, limiting concurrency.
     * *Improvement:* Switch to **PostgreSQL** or **MongoDB** for production environments.
 
+
+##  Live API Documentation (Swagger)
+
+All endpoints are fully documented and testable. Once the server is running, you can access the interactive Swagger UI here:
+
+**[http://localhost:3000/api](http://localhost:3000/api-docs)**
+
+
+### API Demo
+
+**![Demo of Payroll API](https://ibb.co/rfMN64jm)**
 ---
 
 **Author:** Innah Emmanuel Ebuka
