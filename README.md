@@ -2,7 +2,7 @@
 
 A robust, hierarchical payroll API built with **NestJS**, **TypeORM**, and **SQLite**. This application models a corporate structure (Employees, Managers, Sales) and implements a complex, date-aware salary calculation engine using polymorphic business logic. 
 
-    Api demo link below!
+Api demo link below!
 
 ---
 
@@ -104,7 +104,7 @@ Creates a new staff member. i also modified this endpoint to get a single staff 
 * **Example:** `GET /staff?name=John`
 
 #### **Assign Supervisor**
-`PATCH /staff/:staffId/assign-supervisor/:supervisorId`
+`PATCH /staff/assign-supervisor`
 
 Updates a staff member to report to a new supervisor.
 * **Body:**
@@ -179,6 +179,7 @@ All endpoints are fully documented and testable. Once the server is running, you
 
 
 ### API Demo Link!
+This link takes you to the demo video!
 
 **[https://ibb.co/rXZyhXR](https://ibb.co/rXZyhXR)**
 ---
