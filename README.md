@@ -180,7 +180,7 @@ All endpoints are fully documented and testable. Once the server is running, you
 
 ### API Demo Link!
 
-**[https://ibb.co/rfMN64jm](https://ibb.co/rfMN64jm)**
+**[https://ibb.co/rXZyhXR](https://ibb.co/rXZyhXR)**
 ---
 
 **Author:** Innah Emmanuel Ebuka
