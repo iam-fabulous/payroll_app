@@ -7,7 +7,7 @@ export class CalculateSalaryDto {
   @IsNotEmpty()
   staffId: number;
 
-  @ApiProperty({ example: '2024-12-31', description: 'ISO 8601 date string representing the date to calculate salary for' })
+  @ApiProperty({ example: '2024-12-31', description: 'The date string "YYYY-MM-DD" representing the date to calculate salary for' })
   @IsDateString()
   @IsNotEmpty()
   currentDate: string; // "YYYY-MM-DD"

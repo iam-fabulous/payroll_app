@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StaffModule } from './staff/staff.module';
-import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 import { StaffMember } from './staff/models/staff_member';
@@ -25,7 +24,7 @@ import { Sales } from './staff/models/sales';
     }),
     StaffModule,
   ],
-  controllers: [AppController],
+  controllers: [],
   providers: [AppService],
 })
 export class AppModule {}

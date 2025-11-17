@@ -2,8 +2,6 @@
 
 A robust, hierarchical payroll API built with **NestJS**, **TypeORM**, and **SQLite**. This application models a corporate structure (Employees, Managers, Sales) and implements a complex, date-aware salary calculation engine using polymorphic business logic. 
 
-Api demo link below!
-
 ---
 
 ## Features
@@ -94,6 +92,9 @@ Creates a new staff member. i also modified this endpoint to get a single staff 
     ```
     *Type options: `EMPLOYEE`, `MANAGER`, `SALES`*
 
+    ![alt text](PayRoll_API_Demo_Create_Staff.gif)
+
+
 #### **List All Staff**
 `GET /staff`
 
@@ -102,6 +103,9 @@ Creates a new staff member. i also modified this endpoint to get a single staff 
 
 2. Retrieves a staff(s) with 'name'.
 * **Example:** `GET /staff?name=John`
+
+![alt text](PayRoll_API_Demo_Get_All_or_One_Staff.gif)
+
 
 #### **Assign Supervisor**
 `PATCH /staff/assign-supervisor`
@@ -115,6 +119,7 @@ Updates a staff member to report to a new supervisor.
     }
     ```
 
+![alt text](PayRoll_API_Demo_Assign_Supervisor_to_Staff.gif)
 ---
 
 ### Salary Calculations
@@ -136,6 +141,7 @@ Calculates the salary for a specific person as of a specific date.
       "asOf": "2025-01-01"
     }
     ```
+    ![alt text](PayRoll_API_Demo_Calculate_Staff_Salary.gif)
 
 #### **Get Total Company Salary**
 `GET /staff/total-salary`
@@ -151,6 +157,7 @@ Calculates the sum of ALL salaries in the company for a specific date.
       "asOf": "2025-01-01"
     }
     ```
+![alt text](PayRoll_API_Demo_Calculate_Salary_For_All_Staff.gif)
 
 ---
 
