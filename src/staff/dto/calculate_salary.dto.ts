@@ -1,4 +1,4 @@
-import { IsDateString, IsNotEmpty } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CalculateSalaryDto {
@@ -8,7 +8,7 @@ export class CalculateSalaryDto {
   staffId: number;
 
   @ApiProperty({ example: '2024-12-31', description: 'The date string "YYYY-MM-DD" representing the date to calculate salary for' })
+  @IsOptional()
   @IsDateString()
-  @IsNotEmpty()
   currentDate: string; // "YYYY-MM-DD"
 }

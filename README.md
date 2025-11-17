@@ -182,7 +182,7 @@ Calculates the sum of ALL salaries in the company for a specific date.
 
 All endpoints are fully documented and testable. Once the server is running, you can access the interactive Swagger UI here:
 
-**[http://localhost:3000/api](http://localhost:3000/api-docs)**
+**[http://localhost:3000/api-docs](http://localhost:3000/api-docs)**
 
 
 ### API Demo Link!

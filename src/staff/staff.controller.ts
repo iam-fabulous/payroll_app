@@ -44,7 +44,7 @@ export class StaffController {
     async getSalary(
         @Query() query: CalculateSalaryDto,
     ) {
-        const dateAsString = query.currentDate || new Date().toISOString();
+        const dateAsString = query.currentDate;
         const salary = await this.staffService.getSalary(query.staffId, dateAsString);
         const staff = await this.staffService.findStaffById(query.staffId);
 
